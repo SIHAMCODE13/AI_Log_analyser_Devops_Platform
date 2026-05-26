@@ -1,0 +1,30 @@
+---
+# Nginx Ingress — routes external traffic to frontend and backend
+# Requires: helm install ingress-nginx (see README.md for command)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: loganalyzer-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target:  /
+    nginx.ingress.kubernetes.io/proxy-body-size: "110m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+spec:
+  ingressClassName: nginx
+  rules:
+    - http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 80

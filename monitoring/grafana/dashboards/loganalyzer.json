@@ -1,0 +1,44 @@
+{
+  "title": "AI Log Analyzer — Platform Overview",
+  "uid": "loganalyzer-main",
+  "version": 1,
+  "schemaVersion": 39,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1, "type": "stat", "title": "Total HTTP Requests",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "sum(http_requests_total)", "legendFormat": "Requests" }],
+      "options": { "colorMode": "value", "graphMode": "area" }
+    },
+    {
+      "id": 2, "type": "stat", "title": "Request Error Rate",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "sum(rate(http_requests_total{status_code=~'5..'}[5m]))", "legendFormat": "Errors/s" }],
+      "options": { "colorMode": "value", "thresholds": { "steps": [{"value": 0, "color": "green"}, {"value": 1, "color": "red"}] } }
+    },
+    {
+      "id": 3, "type": "stat", "title": "AI Predictions Total",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "ai_predictions_total", "legendFormat": "Predictions" }]
+    },
+    {
+      "id": 4, "type": "stat", "title": "Avg Prediction Latency",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "rate(ai_prediction_duration_seconds_sum[5m]) / rate(ai_prediction_duration_seconds_count[5m])", "legendFormat": "Latency" }],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
+      "id": 5, "type": "timeseries", "title": "Request Rate by Endpoint",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "targets": [{ "expr": "sum by (endpoint) (rate(http_requests_total[5m]))", "legendFormat": "{{endpoint}}" }]
+    },
+    {
+      "id": 6, "type": "timeseries", "title": "Request Latency p95",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "targets": [{ "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))", "legendFormat": "p95" }],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    }
+  ]
+}

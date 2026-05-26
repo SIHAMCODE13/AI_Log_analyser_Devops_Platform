@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Log Analyzer — DevOps Platform</title>
+  <!-- Define API URLs before scripts load -->
+  <script>
+    window.API_BASE_URL = '/api/v1';
+    window.AI_BASE_URL = 'http://localhost:8001';
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"/>
+  <link rel="stylesheet" href="/static/css/dashboard.css"/>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon"><i class="fas fa-brain"></i></div>
+    <div class="brand-text">
+      <span class="brand-name">LogAI</span>
+      <span class="brand-sub">DevOps Platform</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">MAIN</div>
+    <a href="#" class="nav-item active" data-page="dashboard">
+      <i class="fas fa-tachometer-alt"></i><span>Dashboard</span>
+    </a>
+    <a href="#" class="nav-item" data-page="upload">
+      <i class="fas fa-upload"></i><span>Upload Logs</span>
+    </a>
+    <a href="#" class="nav-item" data-page="analyze">
+      <i class="fas fa-microscope"></i><span>Analyze</span>
+    </a>
+    <a href="#" class="nav-item" data-page="results">
+      <i class="fas fa-chart-bar"></i><span>Results</span>
+      <span class="nav-badge" id="badge-results">0</span>
+    </a>
+    <a href="#" class="nav-item" data-page="history">
+      <i class="fas fa-history"></i><span>History</span>
+    </a>
+
+    <div class="nav-section-label mt-3">SYSTEM</div>
+    <a href="#" class="nav-item" data-page="monitoring">
+      <i class="fas fa-heartbeat"></i><span>Monitoring</span>
+    </a>
+    <a href="#" class="nav-item" data-page="settings">
+      <i class="fas fa-cog"></i><span>Settings</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="system-status">
+      <div class="status-dot" id="api-status-dot"></div>
+      <span id="api-status-text">Checking...</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAIN CONTENT ===== -->
+<div class="main-wrapper">
+
+  <!-- Topbar -->
+  <header class="topbar">
+    <button class="sidebar-toggle" id="sidebarToggle">
+      <i class="fas fa-bars"></i>
+    </button>
+    <div class="topbar-breadcrumb">
+      <span class="breadcrumb-root">LogAI</span>
+      <i class="fas fa-chevron-right breadcrumb-sep"></i>
+      <span id="page-title">Dashboard</span>
+    </div>
+    <div class="topbar-actions">
+      <div class="topbar-clock" id="topbar-clock"></div>
+      <button class="btn-icon" title="Notifications">
+        <i class="fas fa-bell"></i>
+        <span class="notif-dot"></span>
+      </button>
+      <div class="user-avatar" title="Admin User">
+        <i class="fas fa-user-circle"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="content-area">
+
+    <!-- ===== PAGE: DASHBOARD ===== -->
+    <div id="page-dashboard" class="page active">
+      <div class="page-header">
+        <h1>Overview</h1>
+        <p>Real-time platform analytics and system health</p>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="stats-grid">
+        <div class="stat-card stat-blue">
+          <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+          <div class="stat-body">
+            <div class="stat-value" id="stat-total-logs">0</div>
+            <div class="stat-label">Total Logs Uploaded</div>
+          </div>
+          <div class="stat-trend trend-up"><i class="fas fa-arrow-up"></i> 12%</div>
+        </div>
+        <div class="stat-card stat-red">
+          <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
+          <div class="stat-body">
+            <div class="stat-value" id="stat-anomalies">0</div>
+            <div class="stat-label">Anomalies Detected</div>
+          </div>
+          <div class="stat-trend trend-down"><i class="fas fa-arrow-down"></i> 5%</div>
+        </div>
+        <div class="stat-card stat-green">
+          <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+          <div class="stat-body">
+            <div class="stat-value" id="stat-analyses">0</div>
+            <div class="stat-label">Analyses Complete</div>
+          </div>
+          <div class="stat-trend trend-up"><i class="fas fa-arrow-up"></i> 8%</div>
+        </div>
+        <div class="stat-card stat-yellow">
+          <div class="stat-icon"><i class="fas fa-bolt"></i></div>
+          <div class="stat-body">
+            <div class="stat-value" id="stat-anomaly-rate">0%</div>
+            <div class="stat-label">Avg. Anomaly Rate</div>
+          </div>
+          <div class="stat-trend" id="stat-rate-trend"></div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="charts-grid">
+        <div class="chart-card chart-large">
+          <div class="chart-header">
+            <h3>Anomaly Detection Timeline</h3>
+            <div class="chart-controls">
+              <button class="chart-btn active" data-range="7">7d</button>
+              <button class="chart-btn" data-range="30">30d</button>
+              <button class="chart-btn" data-range="90">90d</button>
+            </div>
+          </div>
+          <canvas id="timelineChart"></canvas>
+        </div>
+        <div class="chart-card chart-small">
+          <div class="chart-header"><h3>Error Classification</h3></div>
+          <canvas id="classificationChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="activity-card">
+        <div class="chart-header">
+          <h3>Recent Analyses</h3>
+          <a href="#" class="btn-link" data-page="history">View all</a>
+        </div>
+        <div class="activity-table-wrapper">
+          <table class="activity-table">
+            <thead>
+              <tr>
+                <th>Filename</th>
+                <th>Timestamp</th>
+                <th>Lines</th>
+                <th>Anomalies</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="recent-activity-body">
+              <tr><td colspan="6" class="empty-row"><i class="fas fa-inbox"></i> No analyses yet</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: UPLOAD ===== -->
+    <div id="page-upload" class="page">
+      <div class="page-header">
+        <h1>Upload Logs</h1>
+        <p>Upload application log files for AI analysis</p>
+      </div>
+
+      <div class="upload-container">
+        <div class="upload-zone" id="uploadZone">
+          <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+          <h3>Drop log files here</h3>
+          <p>Supports .log, .txt, .gz files up to 100MB</p>
+          <label class="btn-upload" for="fileInput">
+            <i class="fas fa-folder-open"></i> Browse Files
+          </label>
+          <input type="file" id="fileInput" multiple accept=".log,.txt,.gz" hidden/>
+        </div>
+
+        <div class="upload-queue" id="uploadQueue" style="display:none;">
+          <h4>Upload Queue</h4>
+          <div id="queueList"></div>
+          <div class="upload-actions">
+            <button class="btn-primary" id="uploadBtn">
+              <i class="fas fa-upload"></i> Upload All
+            </button>
+            <button class="btn-secondary" id="clearQueueBtn">
+              <i class="fas fa-times"></i> Clear
+            </button>
+          </div>
+        </div>
+
+        <div class="upload-progress" id="uploadProgress" style="display:none;">
+          <div class="progress-label">
+            <span id="progressText">Uploading...</span>
+            <span id="progressPct">0%</span>
+          </div>
+          <div class="progress-bar-wrapper">
+            <div class="progress-bar-fill" id="progressFill"></div>
+          </div>
+        </div>
+
+        <div class="format-guide">
+          <h4><i class="fas fa-info-circle"></i> Supported Log Formats</h4>
+          <div class="format-grid">
+            <div class="format-item">
+              <code>Apache/Nginx</code>
+              <span>Combined log format</span>
+            </div>
+            <div class="format-item">
+              <code>Syslog</code>
+              <span>RFC 5424 format</span>
+            </div>
+            <div class="format-item">
+              <code>Application</code>
+              <span>Custom JSON/text logs</span>
+            </div>
+            <div class="format-item">
+              <code>Docker</code>
+              <span>Container stdout/stderr</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: ANALYZE ===== -->
+    <div id="page-analyze" class="page">
+      <div class="page-header">
+        <h1>Analyze Logs</h1>
+        <p>Run AI analysis on uploaded log files</p>
+      </div>
+
+      <div class="analyze-container">
+        <div class="analyze-form-card">
+          <h4>Select Logs to Analyze</h4>
+          <div class="log-selector" id="logSelector">
+            <div class="empty-state"><i class="fas fa-inbox"></i> No logs available. Upload logs first.</div>
+          </div>
+          <div class="analyze-options">
+            <div class="option-group">
+              <label>Detection Mode</label>
+              <select id="detectionMode" class="form-select-custom">
+                <option value="auto">Auto (Recommended)</option>
+                <option value="anomaly">Anomaly Detection Only</option>
+                <option value="classification">Error Classification Only</option>
+                <option value="both">Full Analysis</option>
+              </select>
+            </div>
+            <div class="option-group">
+              <label>Sensitivity</label>
+              <input type="range" id="sensitivitySlider" min="1" max="10" value="7" class="range-slider"/>
+              <span id="sensitivityValue">7</span>
+            </div>
+          </div>
+          <button class="btn-analyze" id="analyzeBtn">
+            <span class="btn-text"><i class="fas fa-brain"></i> Run AI Analysis</span>
+            <span class="btn-loader" style="display:none;"><i class="fas fa-spinner fa-spin"></i> Analyzing...</span>
+          </button>
+        </div>
+
+        <div class="ai-status-card">
+          <h4>AI Service Status</h4>
+          <div class="ai-metrics">
+            <div class="ai-metric">
+              <span class="ai-metric-label">Model</span>
+              <span class="ai-metric-value">IsolationForest + RandomForest</span>
+            </div>
+            <div class="ai-metric">
+              <span class="ai-metric-label">Version</span>
+              <span class="ai-metric-value">v2.1.0</span>
+            </div>
+            <div class="ai-metric">
+              <span class="ai-metric-label">Status</span>
+              <span class="ai-metric-value status-green" id="ai-svc-status">
+                <span class="dot-pulse"></span> Online
+              </span>
+            </div>
+            <div class="ai-metric">
+              <span class="ai-metric-label">Avg. Processing</span>
+              <span class="ai-metric-value">~2.3s / 1000 lines</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: RESULTS ===== -->
+    <div id="page-results" class="page">
+      <div class="page-header">
+        <h1>Analysis Results</h1>
+        <p>Detailed AI findings and anomaly reports</p>
+      </div>
+      <div id="results-content">
+        <div class="empty-state-large">
+          <i class="fas fa-chart-pie"></i>
+          <h3>No results yet</h3>
+          <p>Run an analysis to see AI-powered insights</p>
+          <button class="btn-primary" data-navigate="analyze">
+            <i class="fas fa-microscope"></i> Go to Analyze
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: HISTORY ===== -->
+    <div id="page-history" class="page">
+      <div class="page-header">
+        <h1>Analysis History</h1>
+        <p>All past analyses and their results</p>
+      </div>
+      <div class="history-controls">
+        <input type="text" class="search-input" id="historySearch" placeholder="Search by filename..."/>
+        <select class="form-select-custom" id="historyFilter">
+          <option value="">All Status</option>
+          <option value="completed">Completed</option>
+          <option value="failed">Failed</option>
+        </select>
+        <button class="btn-secondary" id="exportHistoryBtn">
+          <i class="fas fa-download"></i> Export CSV
+        </button>
+      </div>
+      <div class="history-table-wrapper">
+        <table class="activity-table" id="historyTable">
+          <thead>
+            <tr>
+              <th>#</th><th>Filename</th><th>Date</th>
+              <th>Lines</th><th>Anomalies</th><th>Classification</th>
+              <th>Duration</th><th>Status</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="history-body">
+            <tr><td colspan="9" class="empty-row"><i class="fas fa-inbox"></i> No history yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: MONITORING ===== -->
+    <div id="page-monitoring" class="page">
+      <div class="page-header">
+        <h1>System Monitoring</h1>
+        <p>Infrastructure health and performance metrics</p>
+      </div>
+      <div class="monitoring-grid">
+        <div class="monitor-card">
+          <h4><i class="fas fa-server"></i> Backend API</h4>
+          <div class="monitor-stat">
+            <span class="monitor-val" id="mon-api-uptime">--</span>
+            <span class="monitor-lbl">Uptime</span>
+          </div>
+          <div class="monitor-links">
+            <a href="http://localhost:8000/docs" target="_blank" class="monitor-link">
+              <i class="fas fa-external-link-alt"></i> API Docs
+            </a>
+            <a href="http://localhost:8000/health" target="_blank" class="monitor-link">
+              <i class="fas fa-heartbeat"></i> Health
+            </a>
+          </div>
+        </div>
+        <div class="monitor-card">
+          <h4><i class="fas fa-brain"></i> AI Service</h4>
+          <div class="monitor-stat">
+            <span class="monitor-val" id="mon-ai-uptime">--</span>
+            <span class="monitor-lbl">Uptime</span>
+          </div>
+          <div class="monitor-links">
+            <a href="http://localhost:8001/docs" target="_blank" class="monitor-link">
+              <i class="fas fa-external-link-alt"></i> AI Docs
+            </a>
+          </div>
+        </div>
+        <div class="monitor-card">
+          <h4><i class="fas fa-chart-area"></i> Grafana</h4>
+          <div class="monitor-stat">
+            <span class="monitor-val">3000</span>
+            <span class="monitor-lbl">Port</span>
+          </div>
+          <div class="monitor-links">
+            <a href="http://localhost:3000" target="_blank" class="monitor-link">
+              <i class="fas fa-external-link-alt"></i> Open Grafana
+            </a>
+          </div>
+        </div>
+        <div class="monitor-card">
+          <h4><i class="fas fa-fire"></i> Prometheus</h4>
+          <div class="monitor-stat">
+            <span class="monitor-val">9090</span>
+            <span class="monitor-lbl">Port</span>
+          </div>
+          <div class="monitor-links">
+            <a href="http://localhost:9090" target="_blank" class="monitor-link">
+              <i class="fas fa-external-link-alt"></i> Open Prometheus
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PAGE: SETTINGS ===== -->
+    <div id="page-settings" class="page">
+      <div class="page-header">
+        <h1>Settings</h1>
+        <p>Platform configuration and preferences</p>
+      </div>
+      <div class="monitor-card" style="max-width:600px;">
+        <h4><i class="fas fa-sliders-h"></i> Analysis Defaults</h4>
+        <div class="ai-metrics">
+          <div class="ai-metric">
+            <span class="ai-metric-label">Default Mode</span>
+            <select class="form-select-custom" id="setting-default-mode" style="width:auto;">
+              <option value="auto">Auto</option>
+              <option value="anomaly">Anomaly Only</option>
+              <option value="classification">Classification Only</option>
+              <option value="both">Full Analysis</option>
+            </select>
+          </div>
+          <div class="ai-metric">
+            <span class="ai-metric-label">Default Sensitivity</span>
+            <input type="range" min="1" max="10" value="7" id="setting-sensitivity" class="range-slider" style="width:160px;"/>
+            <span id="setting-sensitivity-val">7</span>
+          </div>
+        </div>
+        <button class="btn-primary" style="margin-top:16px;" onclick="saveSettings()">
+          <i class="fas fa-save"></i> Save Settings
+        </button>
+      </div>
+      <div class="monitor-card" style="max-width:600px; margin-top:16px;">
+        <h4><i class="fas fa-info-circle"></i> About</h4>
+        <div class="ai-metrics">
+          <div class="ai-metric"><span class="ai-metric-label">Platform</span><span class="ai-metric-value">AI DevOps Log Analyzer</span></div>
+          <div class="ai-metric"><span class="ai-metric-label">Version</span><span class="ai-metric-value">1.0.0</span></div>
+          <div class="ai-metric"><span class="ai-metric-label">AI Models</span><span class="ai-metric-value">IsolationForest + RandomForest v2.1.0</span></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ===== MODALS ===== -->
+<div class="modal-overlay" id="resultModal" style="display:none;">
+  <div class="modal-box modal-large">
+    <div class="modal-header">
+      <h3 id="modalTitle">Analysis Result</h3>
+      <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- Toast Notifications -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="/static/js/api.js"></script>
+<script src="/static/js/dashboard.js"></script>
+</body>
+</html>

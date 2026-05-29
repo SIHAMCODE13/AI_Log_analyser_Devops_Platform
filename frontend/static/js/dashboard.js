@@ -1,5 +1,5 @@
-/**
- * AI DevOps Log Analyzer — Dashboard Controller
+﻿/**
+ * AI DevOps Log Analyzer â€” Dashboard Controller
  * Handles all UI logic, page navigation, charts, uploads
  */
 
@@ -69,7 +69,7 @@ function navigateTo(pageId) {
 
   // Trigger page-specific initializations
   if (pageId === 'dashboard') loadDashboardStats();
-  if (pageId === 'analyze')   loadLogSelectorForAnalyze();
+  if (pageId === 'analyze') { loadLogSelectorForAnalyze(); initAnalyze(); }
   if (pageId === 'history')   loadHistory();
   if (pageId === 'results')   loadLatestResults();
 }
@@ -219,7 +219,7 @@ async function loadDashboardStats() {
       updateClassificationChart(data.recent_analyses);
     }
   } catch {
-    // Demo fallback — clearly marked
+    // Demo fallback â€” clearly marked
     animateCounter('stat-total-logs',  0);
     animateCounter('stat-anomalies',   0);
     animateCounter('stat-analyses',    0);
@@ -463,20 +463,35 @@ function initAnalyze() {
 
     const btnText   = btn.querySelector('.btn-text');
     const btnLoader = btn.querySelector('.btn-loader');
-    btnText.style.display  = 'none';
-    btnLoader.style.display = 'flex';
+    if (btnText)   if (btnText)   btnText.style.display   = 'none';
+    if (btnLoader) if (btnLoader) btnLoader.style.display = 'flex';
     btn.disabled = true;
 
     try {
       const result = await AnalysisAPI.analyze({ logIds, mode, sensitivity });
+      showToast('Analyzing... please wait', 'info');
+
+      // Attendre que analyse soit completee sur le serveur
+      const resultIds = Array.isArray(result) ? result.map(r => r.result_id) : [result.result_id];
+      let attempts = 0;
+      while (attempts < 30) {
+        attempts++;
+        await new Promise(res => setTimeout(res, 1000));
+        try {
+          const statuses = await Promise.all(resultIds.map(id => AnalysisAPI.getResult(id)));
+          const allDone = statuses.every(r => r.status === 'completed' || r.status === 'failed');
+          if (allDone) break;
+        } catch(e) {}
+      }
+
       showToast('Analysis complete!', 'success');
       navigateTo('results');
-      loadLatestResults();
+      await loadLatestResults();
     } catch (err) {
       showToast(`Analysis failed: ${err.message}`, 'error');
     } finally {
-      btnText.style.display  = 'inline-flex';
-      btnLoader.style.display = 'none';
+      if (btnText)   if (btnText)   btnText.style.display   = 'inline-flex';
+      if (btnLoader) if (btnLoader) btnLoader.style.display = 'none';
       btn.disabled = false;
     }
   });
@@ -518,7 +533,7 @@ function renderResults(results, container) {
       </div>
     </div>
     <div class="activity-card">
-      <div class="chart-header"><h3>Detected Anomalies — ${latest.filename}</h3></div>
+      <div class="chart-header"><h3>Detected Anomalies â€” ${latest.filename}</h3></div>
       <div class="anomaly-list">
         ${(latest.anomalies || []).map(a => `
           <div class="anomaly-item">
@@ -527,7 +542,7 @@ function renderResults(results, container) {
             <span class="anomaly-text">${a.message}</span>
             <span class="anomaly-severity sev-medium">${a.classification}</span>
           </div>
-        `).join('') || '<div class="empty-state"><i class="fas fa-shield-alt"></i> No anomalies detected — clean logs!</div>'}
+        `).join('') || '<div class="empty-state"><i class="fas fa-shield-alt"></i> No anomalies detected â€” clean logs!</div>'}
       </div>
     </div>
   `;
@@ -535,17 +550,17 @@ function renderResults(results, container) {
 
 function renderDemoResult(container) {
   const demoAnomalies = [
-    { severity: 'critical', line_number: 142,  message: 'OutOfMemoryError: Java heap space — GC overhead limit exceeded',  classification: 'Memory' },
+    { severity: 'critical', line_number: 142,  message: 'OutOfMemoryError: Java heap space â€” GC overhead limit exceeded',  classification: 'Memory' },
     { severity: 'high',     line_number: 387,  message: 'Connection refused: Unable to connect to database on port 3306',  classification: 'DB Error' },
-    { severity: 'high',     line_number: 521,  message: 'Authentication failed for user admin@192.168.1.55 — 5 attempts',  classification: 'Auth Failure' },
-    { severity: 'medium',   line_number: 663,  message: 'Request timeout after 30000ms — /api/v1/analytics endpoint',      classification: 'Timeout' },
-    { severity: 'medium',   line_number: 891,  message: 'HTTP 500 Internal Server Error — unhandled exception in handler',  classification: 'HTTP Error' },
+    { severity: 'high',     line_number: 521,  message: 'Authentication failed for user admin@192.168.1.55 â€” 5 attempts',  classification: 'Auth Failure' },
+    { severity: 'medium',   line_number: 663,  message: 'Request timeout after 30000ms â€” /api/v1/analytics endpoint',      classification: 'Timeout' },
+    { severity: 'medium',   line_number: 891,  message: 'HTTP 500 Internal Server Error â€” unhandled exception in handler',  classification: 'HTTP Error' },
     { severity: 'low',      line_number: 1024, message: 'Slow query detected: SELECT * from logs WHERE ... (2.3s)',         classification: 'DB Error' },
   ];
 
   container.innerHTML = `
     <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.3); border-radius:8px; padding:12px 16px; margin-bottom:20px; font-size:13px; color:var(--accent-yellow);">
-      <i class="fas fa-flask"></i> <strong>Demo Mode</strong> — Connect the backend API to see real results
+      <i class="fas fa-flask"></i> <strong>Demo Mode</strong> â€” Connect the backend API to see real results
     </div>
     <div class="result-grid">
       <div class="result-summary-card">
@@ -562,7 +577,7 @@ function renderDemoResult(container) {
       </div>
     </div>
     <div class="activity-card">
-      <div class="chart-header"><h3>Detected Anomalies — app-2024-01-15.log (Demo)</h3></div>
+      <div class="chart-header"><h3>Detected Anomalies â€” app-2024-01-15.log (Demo)</h3></div>
       <div class="anomaly-list">
         ${demoAnomalies.map(a => `
           <div class="anomaly-item">
@@ -768,7 +783,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // Init components
   initCharts();
   initUpload();
-  initAnalyze();
   loadSettings();
 
   // Load initial page

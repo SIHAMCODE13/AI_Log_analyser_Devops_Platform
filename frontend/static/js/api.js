@@ -1,5 +1,5 @@
-/**
- * AI DevOps Log Analyzer — API Client
+﻿/**
+ * AI DevOps Log Analyzer â€” API Client
  * Centralized API communication layer
  */
 
@@ -29,7 +29,7 @@ class ApiClient {
       const contentType = res.headers.get('content-type') || '';
       return contentType.includes('application/json') ? res.json() : res.text();
     } catch (err) {
-      if (err.name === 'TypeError') throw new Error('Network error — is the backend running?');
+      if (err.name === 'TypeError') throw new Error('Network error â€” is the backend running?');
       throw err;
     }
   }
@@ -87,7 +87,7 @@ const LogsAPI = {
 
       // Handle network errors
       xhr.addEventListener('error', () => {
-        reject(new Error('Network error during upload — is the backend running?'));
+        reject(new Error('Network error during upload â€” is the backend running?'));
       });
 
       // Handle abort

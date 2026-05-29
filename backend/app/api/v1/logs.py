@@ -79,6 +79,8 @@ async def upload_logs(
         saved.append(log)
 
     await db.flush()
+    for log in saved:
+        await db.refresh(log)
     await db.commit()
     logger.info("Uploaded %d log file(s)", len(saved))
     return saved
@@ -122,3 +124,4 @@ async def delete_log(log_id: str, db: AsyncSession = Depends(get_db)):
     if not log:
         raise HTTPException(status_code=404, detail=f"Log '{log_id}' not found")
     await log_service.delete_log_and_file(db, log)
+

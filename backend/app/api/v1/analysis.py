@@ -70,6 +70,7 @@ async def analyze_logs(
         )
         db.add(result)
         await db.flush()  # get result.id before committing
+        await db.commit()  # persist so background task can read it
 
         background_tasks.add_task(
             analysis_service.run_analysis_task,
@@ -82,6 +83,7 @@ async def analyze_logs(
             "status":    "pending",
         })
 
+    await db.commit()  # FIX: commit so background tasks can find result_id in DB
     logger.info("Queued %d analysis job(s)", len(submitted))
     return submitted
 

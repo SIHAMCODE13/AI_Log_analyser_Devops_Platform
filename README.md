@@ -321,19 +321,9 @@ Tous les paramètres sont contrôlés par variables d'environnement :
 
 ---
 
-## 🏢 Checklist production
 
-- [ ] Remplacer tous les secrets `dev-*` par des valeurs de production
-- [ ] Activer SSL/TLS sur l'Ingress (cert-manager)
-- [ ] Configurer l'autoscaling horizontal (HPA)
-- [ ] Mettre en place des sauvegardes MySQL (AWS RDS recommandé en production)
-- [ ] Définir des politiques de rétention des logs
-- [ ] Configurer les alertes dans Grafana
-- [ ] Entraîner les modèles sur de vraies données de production
-- [ ] Activer les network policies pour l'isolation des pods
-- [ ] Configurer le RBAC pour l'accès `kubectl`
 
----
+
 
 ## 📄 Licence
 

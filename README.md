@@ -325,6 +325,4 @@ Tous les paramètres sont contrôlés par variables d'environnement :
 
 
 
-## 📄 Licence
 
-Ce projet est distribué sous licence MIT — voir le fichier [LICENSE](LICENSE).
